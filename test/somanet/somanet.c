@@ -71,7 +71,8 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 
 int main(int argc, char *argv[])
 {
-  adapter = ec_find_adapters();                // Create linked list of available adapters
+  adapter = ec_find_adapters(); // Create linked list of available adapters
+
   struct mg_mgr mgr;                           // Event manager
   mg_log_set(MG_LL_DEBUG);                     // Set log level
   mg_mgr_init(&mgr);                           // Initialize event manager
@@ -79,6 +80,8 @@ int main(int argc, char *argv[])
   for (;;)
     mg_mgr_poll(&mgr, 1000);
   mg_mgr_free(&mgr);
+
+  ec_free_adapters(adapter);
 
   return 0;
 }
