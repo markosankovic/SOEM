@@ -3,7 +3,7 @@
 #include "mongoose.h"
 #include "ethercat.h"
 
-static const char *s_http_addr = "http://127.0.0.1:8000"; // HTTP port
+static const char *s_http_addr = "http://localhost:8000"; // HTTP port
 static const char *s_root_dir = "web_root";
 
 ec_adaptert *adapter = NULL;
