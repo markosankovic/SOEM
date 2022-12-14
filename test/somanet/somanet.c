@@ -29,7 +29,7 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
       }
       names[k++] = ']';
       names[k++] = '\0';
-      mg_http_reply(c, 200, "Content-Type: application/json\r\n", "%s\n", names);
+      mg_http_reply(c, 200, "Content-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n", "%s\n", names);
     } else {
       struct mg_http_serve_opts opts = {.root_dir = s_root_dir};
       mg_http_serve_dir(c, ev_data, &opts);
