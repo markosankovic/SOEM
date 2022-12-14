@@ -15,7 +15,7 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
 
     printf("\n_________________________________________________________________________\n");
-    printf("%s", hm->method.ptr);
+    printf("%s\n\n", hm->method.ptr);
 
     if (mg_http_match_uri(hm, "/api/getAdapters"))
     {
