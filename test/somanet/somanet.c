@@ -8,6 +8,113 @@ static const char *s_root_dir = "web_root";
 
 char IOmap[4096];
 ec_adaptert *adapter = NULL;
+char usdo[128];
+
+char *SDO2string(uint16 slave, uint16 index, uint8 subidx, uint16 dtype)
+{
+  int l = sizeof(usdo) - 1, i;
+  uint8 *u8;
+  int8 *i8;
+  uint16 *u16;
+  int16 *i16;
+  uint32 *u32;
+  int32 *i32;
+  uint64 *u64;
+  int64 *i64;
+  float *sr;
+  double *dr;
+  char es[32];
+
+  memset(&usdo, 0, 128);
+  ec_SDOread(slave, index, subidx, FALSE, &l, &usdo, EC_TIMEOUTRXM);
+  if (EcatError)
+  {
+    return ec_elist2string();
+  }
+  else
+  {
+    static char str[64] = {0};
+    switch (dtype)
+    {
+    case ECT_BOOLEAN:
+      u8 = (uint8 *)&usdo[0];
+      if (*u8)
+        sprintf(str, "TRUE");
+      else
+        sprintf(str, "FALSE");
+      break;
+    case ECT_INTEGER8:
+      i8 = (int8 *)&usdo[0];
+      sprintf(str, "0x%2.2x / %d", *i8, *i8);
+      break;
+    case ECT_INTEGER16:
+      i16 = (int16 *)&usdo[0];
+      sprintf(str, "0x%4.4x / %d", *i16, *i16);
+      break;
+    case ECT_INTEGER32:
+    case ECT_INTEGER24:
+      i32 = (int32 *)&usdo[0];
+      sprintf(str, "0x%8.8x / %d", *i32, *i32);
+      break;
+    case ECT_INTEGER64:
+      i64 = (int64 *)&usdo[0];
+      sprintf(str, "0x%16.16" PRIx64 " / %" PRId64, *i64, *i64);
+      break;
+    case ECT_UNSIGNED8:
+      u8 = (uint8 *)&usdo[0];
+      sprintf(str, "0x%2.2x / %u", *u8, *u8);
+      break;
+    case ECT_UNSIGNED16:
+      u16 = (uint16 *)&usdo[0];
+      sprintf(str, "0x%4.4x / %u", *u16, *u16);
+      break;
+    case ECT_UNSIGNED32:
+    case ECT_UNSIGNED24:
+      u32 = (uint32 *)&usdo[0];
+      sprintf(str, "0x%8.8x / %u", *u32, *u32);
+      break;
+    case ECT_UNSIGNED64:
+      u64 = (uint64 *)&usdo[0];
+      sprintf(str, "0x%16.16" PRIx64 " / %" PRIu64, *u64, *u64);
+      break;
+    case ECT_REAL32:
+      sr = (float *)&usdo[0];
+      sprintf(str, "%f", *sr);
+      break;
+    case ECT_REAL64:
+      dr = (double *)&usdo[0];
+      sprintf(str, "%f", *dr);
+      break;
+    case ECT_BIT1:
+    case ECT_BIT2:
+    case ECT_BIT3:
+    case ECT_BIT4:
+    case ECT_BIT5:
+    case ECT_BIT6:
+    case ECT_BIT7:
+    case ECT_BIT8:
+      u8 = (uint8 *)&usdo[0];
+      sprintf(str, "0x%x / %u", *u8, *u8);
+      break;
+    case ECT_VISIBLE_STRING:
+      strcpy(str, "\"");
+      strcat(str, usdo);
+      strcat(str, "\"");
+      break;
+    case ECT_OCTET_STRING:
+      str[0] = 0x00;
+      for (i = 0; i < l; i++)
+      {
+        sprintf(es, "0x%2.2x ", usdo[i]);
+        strcat(str, es);
+      }
+      break;
+    default:
+      sprintf(str, "Unknown type");
+    }
+    return str;
+  }
+}
 
 void init(char *ifname)
 {
@@ -137,11 +244,12 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
       int index = atoi(param);
       mg_http_get_var(&hm->query, "subindex", param, 255);
       int subindex = atoi(param);
-      printf("slave: %d, index: %d, subindex: %d\n", slave, index, subindex);
+      char *value = SDO2string(slave, index, subindex, ECT_INTEGER32);
+      printf("slave: %d, index: %d, subindex: %d, value: %s\n", slave, index, subindex, value);
       mg_http_reply(c, 200,
                     "Access-Control-Allow-Origin: *\r\n"
                     "Content-Type: application/json\r\n",
-                    "{%Q:%d}\n", "value", 123);
+                    "{%Q:\"%s\"}\n", "value", value);
     }
     else
     {
