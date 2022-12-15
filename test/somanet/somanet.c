@@ -8,6 +8,19 @@ static const char *s_root_dir = "web_root";
 
 ec_adaptert *adapter = NULL;
 
+void init(char *ifname)
+{
+  if (ec_init(ifname))
+  {
+    printf("ec_init on %s succeeded.\n", ifname);
+
+    if (ec_config_init(FALSE) > 0)
+    {
+      printf("%d slaves found and configured.\n", ec_slavecount);
+    }
+  }
+}
+
 static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
 {
   if (ev == MG_EV_HTTP_MSG)
@@ -48,10 +61,11 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
     {
       struct mg_str json = hm->body;
       int result = -1;
-      char *id = mg_json_get_str(json, "$.adapter");
-      if (id != NULL)
+      char *ifname = mg_json_get_str(json, "$.adapter");
+      if (ifname != NULL)
       {
-        printf("Connect to %s\r\n", id);
+        printf("Connect to %s\r\n", ifname);
+        init(ifname);
         result = 0;
       }
       mg_http_reply(c, 200,
@@ -59,6 +73,27 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
                     "Access-Control-Allow-Origin: *\r\n"
                     "Content-Type: application/json\r\n",
                     "{%Q:%d}\n", "result", result);
+    }
+    else if (mg_http_match_uri(hm, "/api/getSlaves"))
+    {
+      mg_http_reply(c, 200,
+                    "Access-Control-Allow-Origin: *\r\n"
+                    "Content-Type: application/json\r\n",
+                    "{%Q:%d}\n", "result", 0);
+    }
+    else if (mg_http_match_uri(hm, "/api/readSDO"))
+    {
+      mg_http_reply(c, 200,
+                    "Access-Control-Allow-Origin: *\r\n"
+                    "Content-Type: application/json\r\n",
+                    "{%Q:%d}\n", "result", 0);
+    }
+    else if (mg_http_match_uri(hm, "/api/writeSDO"))
+    {
+      mg_http_reply(c, 200,
+                    "Access-Control-Allow-Origin: *\r\n"
+                    "Content-Type: application/json\r\n",
+                    "{%Q:%d}\n", "result", 0);
     }
     else
     {
