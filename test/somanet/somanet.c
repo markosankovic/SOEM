@@ -128,19 +128,20 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
                     "id", (int)ec_slave[slave].eep_id,
                     "revision", (int)ec_slave[slave].eep_rev);
     }
-    else if (mg_http_match_uri(hm, "/api/readSDO"))
+    else if (mg_http_match_uri(hm, "/api/readSdo"))
     {
+      char param[255];
+      mg_http_get_var(&hm->query, "slave", param, 255);
+      int slave = atoi(param);
+      mg_http_get_var(&hm->query, "index", param, 255);
+      int index = atoi(param);
+      mg_http_get_var(&hm->query, "subindex", param, 255);
+      int subindex = atoi(param);
+      printf("slave: %d, index: %d, subindex: %d\n", slave, index, subindex);
       mg_http_reply(c, 200,
                     "Access-Control-Allow-Origin: *\r\n"
                     "Content-Type: application/json\r\n",
-                    "{%Q:%d}\n", "result", 0);
-    }
-    else if (mg_http_match_uri(hm, "/api/writeSDO"))
-    {
-      mg_http_reply(c, 200,
-                    "Access-Control-Allow-Origin: *\r\n"
-                    "Content-Type: application/json\r\n",
-                    "{%Q:%d}\n", "result", 0);
+                    "{%Q:%d}\n", "value", 123);
     }
     else
     {
