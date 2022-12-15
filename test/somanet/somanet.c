@@ -6,17 +6,52 @@
 static const char *s_http_addr = "http://localhost:8000"; // HTTP port
 static const char *s_root_dir = "web_root";
 
+char IOmap[4096];
 ec_adaptert *adapter = NULL;
 
 void init(char *ifname)
 {
+  int i, cnt;
+
   if (ec_init(ifname))
   {
     printf("ec_init on %s succeeded.\n", ifname);
 
-    if (ec_config_init(FALSE) > 0)
+    if (ec_config(FALSE, &IOmap) > 0)
     {
+      ec_configdc();
+      while (EcatError)
+      {
+        printf("%s", ec_elist2string());
+      }
       printf("%d slaves found and configured.\n", ec_slavecount);
+
+      ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * ec_slavecount);
+
+      if (ec_slave[0].state != EC_STATE_SAFE_OP)
+      {
+        printf("Not all slaves reached safe operational state.\n");
+        ec_readstate();
+        for (i = 1; i <= ec_slavecount; i++)
+        {
+          if (ec_slave[i].state != EC_STATE_SAFE_OP)
+          {
+            printf("Slave %d State=%2x StatusCode=%4x : %s\n",
+                   i, ec_slave[i].state, ec_slave[i].ALstatuscode, ec_ALstatuscode2string(ec_slave[i].ALstatuscode));
+          }
+        }
+      }
+
+      ec_readstate();
+      for (cnt = 1; cnt <= ec_slavecount; cnt++)
+      {
+        printf("\nSlave:%d\n Name:%s\n Output size: %dbits\n Input size: %dbits\n State: %d\n Delay: %d[ns]\n Has DC: %d\n",
+               cnt, ec_slave[cnt].name, ec_slave[cnt].Obits, ec_slave[cnt].Ibits,
+               ec_slave[cnt].state, ec_slave[cnt].pdelay, ec_slave[cnt].hasdc);
+
+        printf(" Configured address: %4.4x\n", ec_slave[cnt].configadr);
+        printf(" Man: %8.8x ID: %8.8x Rev: %8.8x\n", (int)ec_slave[cnt].eep_man, (int)ec_slave[cnt].eep_id, (int)ec_slave[cnt].eep_rev);
+      }
     }
   }
 }
@@ -72,7 +107,7 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
                     "Access-Control-Allow-Headers: *\r\n"
                     "Access-Control-Allow-Origin: *\r\n"
                     "Content-Type: application/json\r\n",
-                    "{%Q:%d}\n", "result", result);
+                    "{%Q:%d}\n", "slaveCount", ec_slavecount);
     }
     else if (mg_http_match_uri(hm, "/api/getSlaves"))
     {

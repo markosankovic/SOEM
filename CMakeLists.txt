@@ -106,6 +106,7 @@ install(FILES
   DESTINATION ${SOEM_INCLUDE_INSTALL_DIR})
 
 if(BUILD_TESTS) 
+  add_subdirectory(test/playground)
   add_subdirectory(test/simple_ng)
   add_subdirectory(test/somanet)
   add_subdirectory(test/linux/slaveinfo)
