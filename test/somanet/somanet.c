@@ -118,7 +118,8 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
                     "Access-Control-Allow-Headers: *\r\n"
                     "Access-Control-Allow-Origin: *\r\n"
                     "Content-Type: application/json\r\n",
-                    "{%Q:%Q,%Q:%d,%Q:%d,%Q:%d,%Q:\"%x\",%Q:\"%x\",%Q:\"%x\"}\n",
+                    "{%Q:\"0x%x\",%Q:%Q,%Q:%d,%Q:%d,%Q:%d,%Q:\"0x%x\",%Q:\"0x%x\",%Q:\"0x%x\"}\n",
+                    "configuredAddress", ec_slave[slave].configadr,
                     "name", ec_slave[slave].name,
                     "outputSize", ec_slave[slave].Obits,
                     "inputSize", ec_slave[slave].Ibits,
