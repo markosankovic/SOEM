@@ -109,12 +109,23 @@ static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data)
                     "Content-Type: application/json\r\n",
                     "{%Q:%d}\n", "slaveCount", ec_slavecount);
     }
-    else if (mg_http_match_uri(hm, "/api/getSlaves"))
+    else if (mg_http_match_uri(hm, "/api/getSlaveInfo*"))
     {
+      char param[255];
+      mg_http_get_var(&hm->query, "slave", param, 255);
+      int slave = atoi(param);
       mg_http_reply(c, 200,
+                    "Access-Control-Allow-Headers: *\r\n"
                     "Access-Control-Allow-Origin: *\r\n"
                     "Content-Type: application/json\r\n",
-                    "{%Q:%d}\n", "result", 0);
+                    "{%Q:%Q,%Q:%d,%Q:%d,%Q:%d,%Q:\"%x\",%Q:\"%x\",%Q:\"%x\"}\n",
+                    "name", ec_slave[slave].name,
+                    "outputSize", ec_slave[slave].Obits,
+                    "inputSize", ec_slave[slave].Ibits,
+                    "state", ec_slave[slave].state,
+                    "manufacturer", (int)ec_slave[slave].eep_man,
+                    "id", (int)ec_slave[slave].eep_id,
+                    "revision", (int)ec_slave[slave].eep_rev);
     }
     else if (mg_http_match_uri(hm, "/api/readSDO"))
     {
