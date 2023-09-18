@@ -1,0 +1,1 @@
+"C:\Users\marko\github\markosankovic\SOEM\build\test\meas\meas.exe \Device\NPF_{E4E38914-CDB6-4595-8CD5-0BC388A1468A}"
