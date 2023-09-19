@@ -10,9 +10,9 @@
 
 char IOmap[4096];
 #define LOOPCNT 1000
-double tstart = 0;
-double times[LOOPCNT];
-double all_times[LOOPCNT * 3];
+double times[LOOPCNT * 3];
+double t1 = 0;
+double t2 = 0;
 
 double get_microseconds() {
 #ifdef _WIN32
@@ -34,23 +34,6 @@ double get_microseconds() {
 
 	return microseconds;
 #endif
-}
-
-int write_to_file() {
-	FILE* file = fopen("times.csv", "w");
-
-	if (file == NULL) {
-		printf("Error opening the file.\n");
-		return 1;
-	}
-
-	for (int i = 0; i < LOOPCNT; i++) {
-		fprintf(file, "%f\n", times[i] - tstart);
-	}
-
-	fclose(file);
-
-	return 0;
 }
 
 void meas(char* ifname)
@@ -88,16 +71,17 @@ void meas(char* ifname)
 			{
 				printf("Operational state reached for all slaves.\n");
 
-				tstart = get_microseconds();
 				int wkc = 0;
 				for (i = 0; i < LOOPCNT; i++) {
-					all_times[i * 3 + 0] = get_microseconds();
+					t1 = get_microseconds();
 					ec_send_processdata();
-					all_times[i * 3 + 1] = get_microseconds() - all_times[i * 3 + 0];
+					t2 = get_microseconds();
+					times[i * 3] = t2 - t1;
+					t1 = t2;
 					wkc = ec_receive_processdata(1500);
-					all_times[i * 3 + 2] = get_microseconds() - all_times[i * 3 + 0];
-					all_times[i * 3 + 0] = wkc;
-					//times[i] = get_microseconds();
+					t2 = get_microseconds();
+					times[i * 3 + 1] = t2 - t1;
+					times[i * 3 + 2] = wkc;
 				}
 			}
 			else
@@ -119,17 +103,16 @@ void meas(char* ifname)
 
 int main(int argc, char* argv[])
 {
-	ec_adaptert* adapter = NULL;
 	printf("SOMANET SOEM Measurement\n");
 
 	if (argc > 1)
 	{
 		meas(argv[1]);
-		write_to_file();
+
 		for (int i = 0; i < LOOPCNT; i++) {
-			printf("%d\n", (int) all_times[i * 3]);
-			printf("%f\n", all_times[i * 3 + 1] / 1000);
-			printf("%f\n\n", all_times[i * 3 + 2] / 1000);
+			printf("snd: %f\n", times[i * 3]);
+			printf("rcv: %f\n", times[i * 3 + 1]);
+			printf("wkc: %d\n\n", (int) times[i * 3 + 2]);
 		}
 	}
 
