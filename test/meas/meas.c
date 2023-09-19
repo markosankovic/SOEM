@@ -9,9 +9,10 @@
 #endif
 
 char IOmap[4096];
-#define LOOPCNT 10000
+#define LOOPCNT 1000
 double tstart = 0;
 double times[LOOPCNT];
+double all_times[LOOPCNT * 3];
 
 double get_microseconds() {
 #ifdef _WIN32
@@ -88,10 +89,15 @@ void meas(char* ifname)
 				printf("Operational state reached for all slaves.\n");
 
 				tstart = get_microseconds();
+				int wkc = 0;
 				for (i = 0; i < LOOPCNT; i++) {
+					all_times[i * 3 + 0] = get_microseconds();
 					ec_send_processdata();
-					ec_receive_processdata(EC_TIMEOUTRET);
-					times[i] = get_microseconds();
+					all_times[i * 3 + 1] = get_microseconds() - all_times[i * 3 + 0];
+					wkc = ec_receive_processdata(1500);
+					all_times[i * 3 + 2] = get_microseconds() - all_times[i * 3 + 0];
+					all_times[i * 3 + 0] = wkc;
+					//times[i] = get_microseconds();
 				}
 			}
 			else
@@ -120,6 +126,11 @@ int main(int argc, char* argv[])
 	{
 		meas(argv[1]);
 		write_to_file();
+		for (int i = 0; i < LOOPCNT; i++) {
+			printf("%d\n", (int) all_times[i * 3]);
+			printf("%f\n", all_times[i * 3 + 1] / 1000);
+			printf("%f\n\n", all_times[i * 3 + 2] / 1000);
+		}
 	}
 
 	return 0;
