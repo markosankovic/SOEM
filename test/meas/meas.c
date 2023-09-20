@@ -9,12 +9,13 @@
 #endif
 
 char IOmap[4096];
-#define LOOPCNT 1000
-double times[LOOPCNT * 3];
+int iter_cnt = 0;
+double *durations;
 double t1 = 0;
 double t2 = 0;
 
-double get_microseconds() {
+double get_microseconds()
+{
 #ifdef _WIN32
 	LARGE_INTEGER frequency;
 	LARGE_INTEGER start_time;
@@ -36,7 +37,27 @@ double get_microseconds() {
 #endif
 }
 
-void meas(char* ifname)
+int write_to_file()
+{
+	FILE *file = fopen("durations.csv", "w");
+
+	if (file == NULL)
+	{
+		printf("Error opening the file.\n");
+		return 1;
+	}
+
+	for (int i = 0; i < iter_cnt; i++)
+	{
+		fprintf(file, "%f,%f\n", durations[i * 2 + 0] / 1000, durations[i * 2 + 1] / 1000);
+	}
+
+	fclose(file);
+
+	return 0;
+}
+
+void meas(char *ifname)
 {
 	int i, chk;
 
@@ -72,16 +93,17 @@ void meas(char* ifname)
 				printf("Operational state reached for all slaves.\n");
 
 				int wkc = 0;
-				for (i = 0; i < LOOPCNT; i++) {
+
+				for (i = 0; i < iter_cnt; i++)
+				{
 					t1 = get_microseconds();
 					ec_send_processdata();
 					t2 = get_microseconds();
-					times[i * 3] = t2 - t1;
+					durations[i * 2 + 0] = t2 - t1;
 					t1 = t2;
-					wkc = ec_receive_processdata(1500);
+					wkc = ec_receive_processdata(EC_TIMEOUTRET);
 					t2 = get_microseconds();
-					times[i * 3 + 1] = t2 - t1;
-					times[i * 3 + 2] = wkc;
+					durations[i * 2 + 1] = t2 - t1;
 				}
 			}
 			else
@@ -93,7 +115,7 @@ void meas(char* ifname)
 					if (ec_slave[i].state != EC_STATE_OPERATIONAL)
 					{
 						printf("Slave %d State=0x%2.2x StatusCode=0x%4.4x : %s\n",
-							i, ec_slave[i].state, ec_slave[i].ALstatuscode, ec_ALstatuscode2string(ec_slave[i].ALstatuscode));
+									 i, ec_slave[i].state, ec_slave[i].ALstatuscode, ec_ALstatuscode2string(ec_slave[i].ALstatuscode));
 					}
 				}
 			}
@@ -101,19 +123,27 @@ void meas(char* ifname)
 	}
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	printf("SOMANET SOEM Measurement\n");
 
-	if (argc > 1)
+	if (argc > 2)
 	{
+		iter_cnt = atoi(argv[2]);
+		int size = iter_cnt * 2;
+		durations = (double *)malloc(size * sizeof(double));
+
+		if (durations == NULL)
+		{
+			printf("ERROR: Failed to allocated array of size %d\n", size);
+			return -1;
+		}
+
 		meas(argv[1]);
 
-		for (int i = 0; i < LOOPCNT; i++) {
-			printf("snd: %f\n", times[i * 3]);
-			printf("rcv: %f\n", times[i * 3 + 1]);
-			printf("wkc: %d\n\n", (int) times[i * 3 + 2]);
-		}
+		write_to_file();
+
+		free(durations);
 	}
 
 	return 0;
