@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "ethercat.h"
 
@@ -105,6 +106,7 @@ void meas(char *ifname)
 					t2 = get_microseconds();
 					durations[i * 2 + 1] = t2 - t1;
 				}
+				printf("Last wkc %d\n", wkc);
 			}
 			else
 			{
