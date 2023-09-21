@@ -20,6 +20,16 @@ nmake
 
 Follow https://openethercatsociety.github.io/doc/soem/tutorial_8txt.html
 
+## Build 
+
+From Developer Command Prompt for VS 2022
+
+```
+mkdir build
+cd build
+cmake -G "Visual Studio 17 2022" ..
+```
+
 ## SIMPLE_NG
 
 Get available adapters by running simple_ng.exe:

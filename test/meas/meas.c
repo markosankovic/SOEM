@@ -147,6 +147,20 @@ int main(int argc, char *argv[])
 
 		free(durations);
 	}
+	else
+	{
+		ec_adaptert *adapter = NULL;
+		printf("Usage example: meas.exe \"\\Device\\NPF_{E4E38914-CDB6-4595-8CD5-0BC388A1468A}\" 10000\n");
+
+		printf("\nAvailable adapters:\n");
+		adapter = ec_find_adapters();
+		while (adapter != NULL)
+		{
+			printf("  - %s  (%s)\n", adapter->name, adapter->desc);
+			adapter = adapter->next;
+		}
+		ec_free_adapters(adapter);
+	}
 
 	return 0;
 }
