@@ -3,7 +3,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modu
 project(SOEM
     DESCRIPTION "Simple Open EtherCAT Master"
     VERSION 1.4.0
-    LANGUAGES C)
+    LANGUAGES C CXX)
 
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   # Default to installing in SOEM source directory
@@ -109,6 +109,7 @@ if(BUILD_TESTS)
   #add_subdirectory(test/playground)
   add_subdirectory(test/simple_ng)
   add_subdirectory(test/meas)
+  add_subdirectory(test/multimedia_timer)
   #add_subdirectory(test/somanet)
   #add_subdirectory(test/linux/slaveinfo)
   #add_subdirectory(test/linux/eepromtool)
